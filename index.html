@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>YouTube Script Writer AI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(14, 165, 233, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(14, 165, 233, 0.08) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: gridMove 25s linear infinite;
+            z-index: -1;
+        }
+
+        @media (max-width: 768px) {
+            body::before {
+                background-size: 20px 20px;
+                animation: gridMove 30s linear infinite;
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .app {
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 50%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+        }
+
+        .floating-orbs {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .orb1 {
+            top: 20%;
+            left: 20%;
+            width: 150px;
+            height: 150px;
+            background: rgba(14, 165, 233, 0.3);
+            animation-delay: 0s;
+        }
+
+        .orb2 {
+            top: 60%;
+            right: 20%;
+            width: 100px;
+            height: 100px;
+            background: rgba(168, 85, 247, 0.3);
+            animation-delay: 2s;
+        }
+
+        .orb3 {
+            bottom: 20%;
+            left: 30%;
+            width: 120px;
+            height: 120px;
+            background: rgba(236, 72, 153, 0.3);
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @media (max-width: 768px) {
+            .floating-orbs {
+                display: none;
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0.75rem;
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+            border-radius: 20px;
+            margin: 0 auto 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+            position: relative;
+        }
+
+        .logo::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 30%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border-left: 16px solid white;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                width: 60px;
+                height: 60px;
+                margin: 0 auto 2rem;
+            }
+            
+            .logo::before {
+                border-left: 12px solid white;
+                border-top: 8px solid transparent;
+                border-bottom: 8px solid transparent;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(14, 165, 233, 0); }
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #0ea5e9, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px rgba(14, 165, 233, 0.5); }
+            50% { text-shadow: 0 0 40px rgba(168, 85, 247, 0.5); }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.2rem;
+                margin-bottom: 0.75rem;
+                line-height: 1.2;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 1.8rem;
+                margin-bottom: 0.5rem;
+                padding: 0 0.5rem;
+            }
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a1a1aa;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .subtitle {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+                padding: 0 1rem;
+                max-width: 100%;
+            }
+        }
+
+        .glass-card {
+            background: rgba(39, 39, 42, 0.5);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(14, 165, 233, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .glass-card {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                border-radius: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .glass-card {
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border-radius: 0.5rem;
+                backdrop-filter: blur(15px);
+            }
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a1a1aa;
+            font-weight: 500;
+        }
+
+        .input, .select {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(39, 39, 42, 0.8);
+            border: 1px solid rgba(63, 63, 70, 0.5);
+            border-radius: 0.75rem;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input:focus, .select:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        .input::placeholder {
+            color: #71717a;
+        }
+
+        .select {
+            cursor: pointer;
+        }
+
+        .select option {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        @media (max-width: 480px) {
+            .input, .select {
+                padding: 0.75rem;
+                font-size: 16px;
+                border-radius: 0.375rem;
+            }
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, #0ea5e9, #0284c7);
+            border: none;
+            border-radius: 0.75rem;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 50px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.95rem;
+                border-radius: 0.375rem;
+                min-height: 48px;
+            }
+            
+            .btn:hover:not(:disabled) {
+                transform: none;
+                box-shadow: none;
+            }
+        }
+
+        .output-section {
+            display: none;
+        }
+
+        .output-section.show {
+            display: block;
+        }
+
+        .script-preview {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            background: rgba(39, 39, 42, 0.8);
+            border: 1px solid rgba(63, 63, 70, 0.5);
+            border-radius: 0.75rem;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            overflow-y: auto;
+            max-height: 600px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .script-preview h1 {
+            color: #0ea5e9;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #0ea5e9;
+            padding-bottom: 0.5rem;
+        }
+
+        .script-preview h2 {
+            color: #a855f7;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.75rem 0;
+        }
+
+        .script-preview h3 {
+            color: #ec4899;
+            font-size: 1rem;
+            margin: 1rem 0 0.5rem 0;
+        }
+
+        .script-preview strong {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .btn-download {
+            background: linear-gradient(45deg, #10b981, #059669);
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 40px;
+        }
+
+        .btn-download:hover:not(:disabled) {
+            background: linear-gradient(45deg, #059669, #047857);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-download:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-download:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 480px) {
+            .btn-download {
+                padding: 0.75rem 1rem;
+                font-size: 0.85rem;
+                min-height: 44px;
+            }
+            
+            .btn-download:hover:not(:disabled) {
+                transform: none;
+                box-shadow: none;
+            }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            background: rgba(63, 63, 70, 0.5);
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(82, 82, 91, 0.3);
+            border-radius: 0.5rem;
+            color: #d4d4d8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-height: 40px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            min-width: 150px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(63, 63, 70, 0.8);
+            color: white;
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 480px) {
+            .btn-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .btn-secondary {
+                padding: 0.75rem 1rem;
+                min-height: 44px;
+                min-width: auto;
+            }
+            
+            .btn-secondary:hover:not(:disabled) {
+                background: rgba(63, 63, 70, 0.5);
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(14, 165, 233, 0.3);
+            border-top: 3px solid #0ea5e9;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .result-header h2 {
+            color: #0ea5e9;
+            font-size: 1.3rem;
+            margin: 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(63, 63, 70, 0.3);
+            color: #71717a;
+        }
+
+        .footer a {
+            color: #0ea5e9;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #a855f7;
+        }
+
+        @media (max-width: 768px) {
+            .footer {
+                margin-top: 2rem;
+                padding-top: 1.5rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        .info-text {
+            color: #a1a1aa;
+            margin-top: 0.5rem;
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .info-text a {
+            color: #0ea5e9;
+            text-decoration: none;
+        }
+
+        .info-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="floating-orbs">
+            <div class="orb orb1"></div>
+            <div class="orb orb2"></div>
+            <div class="orb orb3"></div>
+        </div>
+
+        <div class="container">
+            <header class="header">
+                <div class="logo"></div>
+                <h1 class="title">YouTube Script Writer AI</h1>
+                <p class="subtitle">
+                    Generate engaging YouTube scripts powered by Google Gemini AI - Fully Functional on GitHub Pages
+                </p>
+            </header>
+
+            <main>
+                <div class="glass-card">
+                    <div class="input-group">
+                        <label class="label">🔑 Enter your Gemini API Key</label>
+                        <input 
+                            type="password" 
+                            id="api-key" 
+                            class="input" 
+                            placeholder="Paste your free Gemini API key (get from ai.google.dev)"
+                            title="Get free key at https://ai.google.dev"
+                        >
+                        <small class="info-text">
+                            Get your free API key at <a href="https://ai.google.dev" target="_blank">ai.google.dev</a>
+                        </small>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="label">📝 Enter the topic for your YouTube script</label>
+                        <input 
+                            type="text" 
+                            id="topic" 
+                            class="input" 
+                            placeholder="e.g., 5G Technology, AI ke fayde, Cryptocurrency, Social Media"
+                        >
+                    </div>
+
+                    <div class="input-group">
+                        <label class="label">⏱️ Video Type</label>
+                        <select id="video-type" class="select">
+                            <option value="short">Short Video (60-90 seconds)</option>
+                            <option value="long">Long Video (3-6 minutes)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn" onclick="generateScript()">
+                        <span id="btn-text">🚀 Generate Script</span>
+                    </button>
+                </div>
+
+                <div class="glass-card output-section" id="output-section">
+                    <div id="error-message" class="error-message">
+                        <p></p>
+                    </div>
+
+                    <div id="loading" class="loading">
+                        <div class="spinner"></div>
+                        <p id="loading-status">Generating your TechFela script...</p>
+                    </div>
+
+                    <div id="script-output" style="display: none;">
+                        <div class="result-header">
+                            <h2>✨ Generated Script</h2>
+                            <div class="btn-group">
+                                <button class="btn-download" onclick="downloadScript(event)">
+                                    📥 Download PDF
+                                </button>
+                                <button class="btn-secondary" onclick="copyToClipboard()">
+                                    📋 Copy Text
+                                </button>
+                            </div>
+                        </div>
+
+                        <div 
+                            id="script-preview" 
+                            class="script-preview"
+                            style="display: none;"
+                        ></div>
+
+                        <div id="script-info" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(14, 165, 233, 0.1); border-radius: 0.5rem; color: #a1a1aa; font-size: 0.9rem;">
+                            <p>✅ Script generated successfully! Download as PDF or copy the text to use in your video.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="footer">
+                <p>🚀 Powered by <a href="https://ai.google.dev" target="_blank">Google Gemini AI</a> | Running 100% on GitHub Pages</p>
+                <p style="margin-top: 0.5rem;">💻 No backend server • 🔒 All processing in your browser • 🎬 TechFela Roman Urdu Scripts</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // GEMINI API CONFIGURATION
+        // ============================================
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+
+        // ============================================
+        // SYSTEM PROMPTS (Hidden from user, sent to AI only)
+        // ============================================
+        const SYSTEM_PROMPTS = {
+            short: `You are a professional scriptwriter for TechFela YouTube channel specializing in Roman Urdu scripts.
+
+CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
+
+1. LANGUAGE & TONE:
+   - Write ONLY in Roman Urdu (Hindustani/Urdu written in Latin script)
+   - Casual, witty, conversational tone with light sarcasm
+   - Incorporate desi humor, pop culture memes, playful exaggeration
+   - Make it relatable to Pakistani/South Asian audience
+   - DO NOT include English translations or English words
+
+2. FORMAT - MUST BE EXACT:
+   - Start with: Video Title: [Creative title in Roman Urdu with emoji]
+   - Then timestamps: (0-10 sec), (10-25 sec), (25-40 sec), etc.
+   - For each timestamp write ONLY Voiceover text
+   - NO visual descriptions needed
+   - Maximum total: 90 seconds
+
+3. OPENING - CRITICAL:
+   - NO "Assalam O Alaikum" or any greeting
+   - Start DIRECTLY with engaging dialogue about the topic
+   - Make first 10 seconds a hook that stops viewers from swiping
+   - Use contrast, controversy, humor, or surprise to grab attention
+
+4. CLOSING:
+   - End with TechFela-style subscribe message in funny way
+   - Make it natural, not forced
+
+5. OUTPUT RULES - CRITICAL:
+   - NO preamble like "Okay, here's the script:" or "Hope you like it:"
+   - NO explanation before or after
+   - JUST the pure Roman Urdu script
+   - Ready for voiceover immediately
+
+Now generate a script for this topic:`,
+
+            long: `You are a professional scriptwriter for TechFela YouTube channel specializing in Roman Urdu scripts.
+
+CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
+
+1. LANGUAGE & TONE:
+   - Write ONLY in Roman Urdu (Hindustani/Urdu written in Latin script)
+   - Casual, witty, conversational tone with light sarcasm
+   - Incorporate desi humor, pop culture memes, playful examples
+   - Make it relatable to Pakistani/South Asian audience
+   - DO NOT include English translations or English words
+
+2. STRUCTURE:
+   - Opening Hook (0-30 sec): Grab attention with surprise, controversy, or humor
+   - Main Explanation (30-180 sec): Break down concept with examples and humor
+   - Key Insights (180-240 sec): Share facts, twist, or surprising angle
+   - Call to Action (240-360 sec): Like, comment, subscribe in TechFela's funny way
+
+3. FORMAT:
+   - Start with: Video Title: [Creative title in Roman Urdu with emoji]
+   - Include timestamps for structure
+   - ONLY Voiceover text (no visuals)
+   - Total: 3-6 minutes (~450-900 words)
+
+4. OUTPUT RULES - CRITICAL:
+   - NO preamble, explanations, or commentary
+   - NO English words or translations
+   - NO greetings
+   - JUST pure Roman Urdu voiceover script
+   - Ready to record immediately
+
+Now generate a script for this topic:`
+        };
+
+        // ============================================
+        // MAIN FUNCTION - GENERATE SCRIPT
+        // ============================================
+        async function generateScript() {
+            const apiKey = document.getElementById('api-key').value.trim();
+            const topic = document.getElementById('topic').value.trim();
+            const videoType = document.getElementById('video-type').value;
+
+            // Validation
+            if (!apiKey) {
+                showError('❌ Please paste your Gemini API key! Get it free at https://ai.google.dev');
+                return;
+            }
+
+            if (!topic) {
+                showError('❌ Please enter a video topic!');
+                return;
+            }
+
+            if (topic.length > 500) {
+                showError('❌ Topic is too long! Please keep it under 500 characters.');
+                return;
+            }
+
+            // Get UI elements
+            const outputSection = document.getElementById('output-section');
+            const loading = document.getElementById('loading');
+            const loadingStatus = document.getElementById('loading-status');
+            const scriptOutput = document.getElementById('script-output');
+            const scriptPreview = document.getElementById('script-preview');
+            const scriptInfo = document.getElementById('script-info');
+            const errorMessage = document.getElementById('error-message');
+            const btnText = document.getElementById('btn-text');
+            const btn = document.querySelector('.btn');
+
+            // Reset UI
+            outputSection.classList.add('show');
+            loading.style.display = 'block';
+            scriptOutput.style.display = 'none';
+            scriptPreview.style.display = 'none';
+            scriptInfo.style.display = 'none';
+            errorMessage.style.display = 'none';
+            btnText.textContent = '⏳ Generating...';
+            btn.disabled = true;
+
+            try {
+                loadingStatus.textContent = '🎬 Creating your TechFela script...';
+
+                // Validate API key
+                if (apiKey.length < 10) {
+                    throw new Error('API key appears too short. Please paste your full Gemini API key from https://ai.google.dev');
+                }
+
+                // Build full prompt
+                const systemPrompt = SYSTEM_PROMPTS[videoType];
+                const fullPrompt = systemPrompt + '\n' + topic;
+
+                console.log('📡 Connecting to Gemini API...');
+                console.log('🔑 API Key length:', apiKey.length);
+
+                // Make API request
+                const requestBody = {
+                    contents: [
+                        {
+                            parts: [
+                                {
+                                    text: fullPrompt
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        temperature: 0.85,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 4096,
+                    }
+                };
+
+                const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('📊 Response status:', response.status);
+
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.error?.message || errorMsg;
+                        console.error('API Error:', errorData);
+                    } catch (e) {
+                        console.error('Could not parse error response');
+                    }
+                    
+                    // Provide helpful error messages
+                    if (response.status === 400 || errorMsg.includes('INVALID_ARGUMENT')) {
+                        throw new Error('Invalid API key format. Visit https://ai.google.dev to get a valid key.');
+                    } else if (response.status === 403 || errorMsg.includes('PERMISSION_DENIED')) {
+                        throw new Error('API key denied. Enable Gemini API in Google Cloud Console.');
+                    } else if (response.status === 429 || errorMsg.includes('RESOURCE_EXHAUSTED')) {
+                        throw new Error('API quota exceeded. Wait a few moments and try again.');
+                    } else {
+                        throw new Error(`Gemini API Error: ${errorMsg}`);
+                    }
+                }
+
+                // Parse response
+                const data = await response.json();
+                console.log('✅ API Response received');
+                
+                if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+                    console.error('Invalid response structure:', data);
+                    throw new Error('Empty response from Gemini API. Please try again.');
+                }
+
+                // Get script and clean it
+                let script = data.candidates[0].content.parts[0].text.trim();
+                script = removeSystemPromptFromOutput(script);
+                
+                console.log('📝 Script generated, length:', script.length);
+                
+                // Display script
+                loadingStatus.textContent = '✅ Script generated successfully!';
+                loading.style.display = 'none';
+                scriptPreview.textContent = script;
+                scriptPreview.style.display = 'block';
+                scriptOutput.style.display = 'block';
+                scriptInfo.style.display = 'block';
+                
+                // Save to history
+                saveToHistory(topic, videoType, script);
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                loading.style.display = 'none';
+                scriptOutput.style.display = 'block';
+                showError(error.message);
+            } finally {
+                btnText.textContent = '🚀 Generate Script';
+                btn.disabled = false;
+            }
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        // Clean AI output - remove preambles
+        function removeSystemPromptFromOutput(text) {
+            // Remove common preambles
+            text = text.replace(/^(Okay, here's the script:?|Here's your script:?|Hope you like it:?|Here's a script:?)\s*/i, '');
+            text = text.replace(/^(I've created|I've written|I recommend|Let me create)[^:\n]*:\s*/i, '');
+            
+            // Remove explanations at end
+            text = text.replace(/\n(Hope you like it|\(hope you like it|Let me know if|Feel free to|I hope|This script)[^\n]*/gi, '');
+            
+            return text.trim();
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.querySelector('p').textContent = message;
+            errorMessage.style.display = 'block';
+
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 8000);
+        }
+
+        // Copy script to clipboard
+        function copyToClipboard() {
+            const scriptText = document.getElementById('script-preview').textContent;
+            if (!scriptText) {
+                showError('❌ No script to copy!');
+                return;
+            }
+
+            navigator.clipboard.writeText(scriptText).then(() => {
+                const btn = event.target.closest('.btn-secondary');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }).catch(() => {
+                showError('❌ Failed to copy. Please try again.');
+            });
+        }
+
+        // Download script as PDF using html2pdf with proper styling
+        // Download script as professional PDF (TEXT-BASED, stable, no html2canvas)
+function downloadScript(evt) {
+    const topic = document.getElementById('topic').value.trim() || 'Untitled';
+    const videoType = document.getElementById('video-type').value;
+    const scriptText = document.getElementById('script-preview').textContent;
+
+    if (!scriptText) {
+        showError('❌ No script to download!');
+        return;
+    }
+
+    const downloadBtn = evt?.target?.closest('.btn-download');
+    const originalText = downloadBtn ? downloadBtn.innerHTML : '';
+    if (downloadBtn) {
+        downloadBtn.innerHTML = '⏳ Generating PDF...';
+        downloadBtn.disabled = true;
+    }
+
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+        // ---------- Layout constants ----------
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const marginL = 14;
+        const marginR = 14;
+        const marginT = 18;
+        const marginB = 16;
+
+        const contentW = pageW - marginL - marginR;
+
+        // Header band
+        const headerH = 16;
+        const startY = marginT + headerH + 6;
+
+        // Typography
+        const fontBody = 11;
+        const fontSmall = 9;
+        const fontTitle = 16;
+        const lineGap = 5.2; // consistent spacing
+
+        // Colors
+        const C_BLUE = [14, 165, 233];    // #0ea5e9
+        const C_RED  = [204, 51, 51];     // #cc3333
+        const C_TEXT = [51, 51, 51];      // #333333
+        const C_GRAY = [140, 140, 140];
+
+        // Helpers
+        const now = new Date();
+        const safeName = topic.substring(0, 40).replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-");
+
+        let y = startY;
+
+        function drawHeader() {
+            // Blue band
+            doc.setFillColor(...C_BLUE);
+            doc.rect(0, 0, pageW, marginT + headerH, "F");
+
+            // Title
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(fontTitle);
+            doc.text("YouTube Script", marginL, marginT);
+
+            // Meta line
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(fontSmall);
+            doc.text(`Topic: ${topic}   |   Type: ${videoType.toUpperCase()}`, marginL, marginT + 7);
+
+            // Reset for body
+            doc.setTextColor(...C_TEXT);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(fontBody);
+        }
+
+        function drawFooter(pageNumber, totalPages) {
+            doc.setFontSize(fontSmall);
+            doc.setTextColor(...C_GRAY);
+            const footerTextLeft = `Generated by YouTube Script Writer AI`;
+            const footerTextRight = `${now.toLocaleString()}  |  Page ${pageNumber}/${totalPages}`;
+
+            doc.text(footerTextLeft, marginL, pageH - 8);
+            const rightW = doc.getTextWidth(footerTextRight);
+            doc.text(footerTextRight, pageW - marginR - rightW, pageH - 8);
+
+            // Reset
+            doc.setTextColor(...C_TEXT);
+            doc.setFontSize(fontBody);
+        }
+
+        function newPage() {
+            doc.addPage();
+            drawHeader();
+            y = startY;
+        }
+
+        function ensureSpace(extra = lineGap) {
+            if (y + extra > pageH - marginB - 10) {
+                newPage();
+            }
+        }
+
+
+        // ========= PROFESSIONAL TITLE CARD =========
+function drawTitleCard(videoTitleText) {
+    const cardX = marginL;
+    const cardY = y;
+    const cardW = contentW;
+    const cardH = 16;
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(cardX, cardY, cardW, cardH, 2, 2, "FD");
+
+    doc.setTextColor(...C_BLUE);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Video Title", cardX + 4, cardY + 6.5);
+
+    doc.setTextColor(...C_TEXT);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+
+    const wrappedTitle = doc.splitTextToSize(videoTitleText, cardW - 8);
+    doc.text(wrappedTitle, cardX + 4, cardY + 12);
+
+    y = cardY + cardH + 8;
+}
+
+// ========= TIMESTAMP CHIP =========
+function drawTimeChip(text) {
+    const chipPaddingX = 3;
+    const chipPaddingY = 2;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+
+    const textW = doc.getTextWidth(text);
+    const chipW = textW + chipPaddingX * 2;
+    const chipH = 6.5;
+
+    ensureSpace(chipH + 2);
+
+    doc.setFillColor(254, 242, 242);
+    doc.setDrawColor(254, 202, 202);
+    doc.roundedRect(marginL, y - 4.8, chipW, chipH, 2, 2, "FD");
+
+    doc.setTextColor(...C_RED);
+    doc.text(text, marginL + chipPaddingX, y);
+
+    doc.setTextColor(...C_TEXT);
+    y += lineGap;
+}
+
+        // Detect line styles
+        const isTimestamp = (line) => /\(\d+[-–]\d+\s*(sec|min)\)/i.test(line);
+        const isHeading = (line) =>
+            /^[A-Z][A-Z\s]+:/.test(line) ||
+            /^(INTRO|HOOK|MAIN|BODY|CONCLUSION|OUTRO|OPENING|CLOSING)$/i.test(line) ||
+            /^Video Title:/i.test(line);
+
+        // Start PDF
+        drawHeader();
+
+        // Split into lines and render with wrapping & pagination
+        const rawLines = scriptText.replace(/\r\n/g, "\n").split("\n");
+
+        for (const raw of rawLines) {
+            const line = (raw || "").trimEnd();
+            // Detect Video Title Line
+            if (/^Video Title\s*:/i.test(line)) {
+                const titleOnly = line.replace(/^Video Title\s*:\s*/i, "").trim();
+                drawTitleCard(titleOnly);
+                continue;
+            }
+
+            // Detect Timestamp
+            if (/\(\d+[-–]\d+\s*(sec|min)\)/i.test(line)) {
+                drawTimeChip(line);
+                continue;
+            }
+
+            // Blank line -> small spacer
+            if (!line.trim()) {
+                ensureSpace(lineGap * 0.7);
+                y += lineGap * 0.7;
+                continue;
+            }
+
+            // Apply style
+           else if (isHeading(line)) {
+                doc.setTextColor(...C_BLUE);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(12.5);
+            } else {
+                doc.setTextColor(...C_TEXT);
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(fontBody);
+            }
+
+            // Wrap text to page width
+            const wrapped = doc.splitTextToSize(line, contentW);
+
+            // Add each wrapped row
+            for (const row of wrapped) {
+                ensureSpace(lineGap);
+                doc.text(row, marginL, y);
+                y += lineGap;
+            }
+
+            // Extra spacing after headings/timestamps
+            if (isHeading(line)) {
+                y += 1.5;
+            } else if (isTimestamp(line)) {
+                y += 0.8;
+            }
+        }
+
+        // Add footers with total page count
+        const totalPages = doc.getNumberOfPages();
+        for (let p = 1; p <= totalPages; p++) {
+            doc.setPage(p);
+            drawFooter(p, totalPages);
+        }
+
+        // Save
+        doc.save(`YouTube-Script-${safeName}-${Date.now()}.pdf`);
+
+        if (downloadBtn) {
+            downloadBtn.innerHTML = '✅ Downloaded!';
+            setTimeout(() => {
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }, 1200);
+        }
+    } catch (error) {
+        console.error('PDF Error:', error);
+        showError('❌ Error generating PDF: ' + (error?.message || error));
+        if (downloadBtn) {
+            downloadBtn.innerHTML = originalText;
+            downloadBtn.disabled = false;
+        }
+    }
+}
+        // ============================================
+        // LOCAL STORAGE MANAGEMENT
+        // ============================================
+
+        // Save script to history
+        function saveToHistory(topic, videoType, script) {
+            try {
+                let history = JSON.parse(localStorage.getItem('script-history') || '[]');
+                history.unshift({
+                    topic: topic,
+                    videoType: videoType,
+                    script: script,
+                    timestamp: new Date().toISOString()
+                });
+                // Keep only last 20 scripts
+                history = history.slice(0, 20);
+                localStorage.setItem('script-history', JSON.stringify(history));
+                console.log('💾 Script saved to history');
+            } catch (error) {
+                console.error('Error saving to history:', error);
+            }
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+
+        // Allow Enter key to generate
+        document.getElementById('topic').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateScript();
+            }
+        });
+
+        // Save API key to localStorage
+        const apiKeyInput = document.getElementById('api-key');
+        apiKeyInput.addEventListener('change', function() {
+            localStorage.setItem('gemini-api-key', this.value);
+        });
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        window.addEventListener('load', () => {
+            // Load saved API key
+            const savedKey = localStorage.getItem('gemini-api-key');
+            if (savedKey) {
+                apiKeyInput.value = savedKey;
+            }
+            
+            console.log('✅ YouTube Script Writer AI loaded successfully!');
+            console.log('📍 Backend Status: NO external server needed');
+            console.log('🌐 Hosting: GitHub Pages (100% free)');
+            console.log('🎬 Mode: TechFela Roman Urdu Script Generator');
+            console.log('📝 System Prompts: Loaded and ready');
+            console.log('🔒 API Key: Stored locally in your browser');
+        });
+    </script>
+</body>
+</html>
